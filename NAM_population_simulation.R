@@ -1,5 +1,5 @@
 nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, nChrom = 10, totalNqtn = 200,
-                           traitMean = 300, traitVar = 64, traitH2 = 1, traitName = "Trait1"){
+                           traitMean = 300, traitVar = 64, traitH2 = 1, traitName = "Trait1", famSize = 250){
   #Architecture: A = Additive, AE = Additive + Epistasis
   #traitH2 = Heritability of the trait
   #suggestion: maker nfounders = 10 x nfamilies
@@ -11,6 +11,7 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
     source(paste0(codes[i]))
   }
   require(AlphaSimR)
+  require(dplyr)
   source("./get.me.my.SNPs.in.hapmap.format.R")
   
   # AlphaSimR creates the founders below.
@@ -28,6 +29,7 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
     ### Pulling out the genotypic/genomic data. This Does not work unless you have added a trait.
     founder_qtl_map <- getQtlMap(trait = 1, simParam = SP)
     founder_qtls <- pullQtlGeno(pop, trait = 1, simParam = SP)
+    row.names(founder_qtls) <- paste0("Inbred_", row.names(founder_qtls))
     
     #The function by Alex transforms the snp data into hapmap format needed for simplePHENOTYPES
     founder_qtls_hapmap <- get.me.my.SNPs.in.hapmap.format(these.SNPs = founder_qtls, 
@@ -120,7 +122,7 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
     crossplan <- cbind(rep(1, nfamilies), c(2:(nfamilies+1)))
     
     ## Make the crosses and generate the hybrids
-    pop_NAM <- makeCross(parents, crossplan, nProgeny = 250, simParam = SP)
+    pop_NAM <- makeCross(parents, crossplan, nProgeny = famSize, simParam = SP)
     
     ### Self and obtain NAM RILs using single seed descent
     nam_rils <- pop_NAM
@@ -131,6 +133,7 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
     ### Again, let us use simplePHENOTYPES to simulate the pheno of the NAM RILs
     nam_qtl_map <- getQtlMap(trait = 1, simParam = SP)
     nam_qtls <- pullQtlGeno(pop=nam_rils, trait = 1, simParam = SP)
+    row.names(nam_qtls) <- paste0("RIL_", row.names(nam_qtls))
     nam_qtls_hapmap <- get.me.my.SNPs.in.hapmap.format(these.SNPs = nam_qtls, 
                                                        this.physical.map = nam_qtl_map)
     
@@ -205,6 +208,10 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
       quiet = T,
       seed = 4000)
     
+    nam_ancestry <- data.frame(RIL_ID = paste0("RIL_",nam_rils@id), 
+                               Donor_parent = paste0("Inbred_", nam_rils@mother), 
+                               Recurrent_parent = paste0("Inbred_", nam_rils@father))
+    
     colnames(founder_gv_alpha) <- c("Founder_ID", paste0(traitName, "_GV"))
     colnames(founder_pheno_alpha) <- c("Founder_ID", paste0(traitName, "_Pheno"))
     colnames(founder_gv) <- c("Founder_ID", paste0(traitName, "_GV"))
@@ -214,6 +221,11 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
     colnames(nam_rils_pheno_alpha) <- c("RIL_ID", paste0(traitName, "_Pheno"))
     colnames(nam_rils_gv) <- c("RIL_ID", paste0(traitName, "_GV"))
     colnames(nam_rils_pheno) <- c("RIL_ID", paste0(traitName, "_Pheno"))
+    
+    nam_rils_gv_alpha <- left_join(nam_ancestry, nam_rils_gv_alpha)
+    nam_rils_pheno_alpha <- left_join(nam_ancestry, nam_rils_pheno_alpha)
+    nam_rils_gv <- left_join(nam_ancestry, nam_rils_gv)
+    nam_rils_pheno <- left_join(nam_ancestry, nam_rils_pheno)
     
   }else if(architecture == "AE"){
     ###################### Additive + Epistasis ------------------------ ####
@@ -225,7 +237,7 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
     ### Pulling out the genotypic/genomic data. This Does not work unless you have added a trait.
     founder_qtl_map <- getQtlMap(trait = 1, simParam = SP)
     founder_qtls <- pullQtlGeno(pop, trait = 1, simParam = SP)
-    
+    row.names(founder_qtls) <- paste0("Inbred_", row.names(founder_qtls))
     founder_qtls_hapmap <- get.me.my.SNPs.in.hapmap.format(these.SNPs = founder_qtls, 
                                                            this.physical.map = founder_qtl_map)
     
@@ -335,7 +347,7 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
     crossplan <- cbind(rep(1, nfamilies), c(2:(nfamilies+1)))
     
     ## Make the crosses and generate the hybrids
-    pop_NAM <- makeCross(parents, crossplan, nProgeny = 250, simParam = SP)
+    pop_NAM <- makeCross(parents, crossplan, nProgeny = famSize, simParam = SP)
     
     ### Self and obtain NAM RILs using single seed descent
     nam_rils <- pop_NAM
@@ -346,6 +358,7 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
     ### Again, let us use simplePHENOTYPES to simulate the pheno of the NAM RILs
     nam_qtl_map <- getQtlMap(trait = 1, simParam = SP)
     nam_qtls <- pullQtlGeno(pop=nam_rils, trait = 1, simParam = SP)
+    row.names(nam_qtls) <- paste0("RIL_", row.names(nam_qtls))
     nam_qtls_hapmap <- get.me.my.SNPs.in.hapmap.format(these.SNPs = nam_qtls, 
                                                        this.physical.map = nam_qtl_map)
     
@@ -429,6 +442,10 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
       quiet = T,
       seed = 4000)
     
+    nam_ancestry <- data.frame(RIL_ID = paste0("RIL_",nam_rils@id), 
+                               Donor_parent = paste0("Inbred_", nam_rils@mother), 
+                               Recurrent_parent = paste0("Inbred_", nam_rils@father))
+    
     colnames(founder_gv_alpha) <- c("Founder_ID", paste0(traitName, "_GV"))
     colnames(founder_pheno_alpha) <- c("Founder_ID", paste0(traitName, "_Pheno"))
     colnames(founder_gv) <- c("Founder_ID", paste0(traitName, "_GV"))
@@ -438,12 +455,31 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
     colnames(nam_rils_pheno_alpha) <- c("RIL_ID", paste0(traitName, "_Pheno"))
     colnames(nam_rils_gv) <- c("RIL_ID", paste0(traitName, "_GV"))
     colnames(nam_rils_pheno) <- c("RIL_ID", paste0(traitName, "_Pheno"))
+    
+    nam_rils_gv_alpha <- left_join(nam_ancestry, nam_rils_gv_alpha)
+    nam_rils_pheno_alpha <- left_join(nam_ancestry, nam_rils_pheno_alpha)
+    nam_rils_gv <- left_join(nam_ancestry, nam_rils_gv)
+    nam_rils_pheno <- left_join(nam_ancestry, nam_rils_pheno)
   }
+  #### Exporting genomic data
+  founders_snps <- pullSegSiteGeno(founders)
+  rownames(founders_snps) <- paste0("Inbred_", rownames(founders_snps))
+  rils_snps <- pullSegSiteGeno(nam_rils)
+  rownames(rils_snps) <- paste0("RIL_", rownames(rils_snps))
+  founders_hapmap <- get.me.my.SNPs.in.hapmap.format(these.SNPs = founders_snps, this.physical.map = getGenMap(founders))
+  rils_hapmap <- get.me.my.SNPs.in.hapmap.format(these.SNPs = rils_snps, this.physical.map = getGenMap(founders))
+  
+  #### Merging results by R package used
+  founder_alpha <- full_join(founder_gv_alpha, founder_pheno_alpha)
+  founder_simplepheno <- full_join(founder_gv, founder_pheno)
+  rils_alpha <- full_join(nam_rils_gv_alpha, nam_rils_pheno_alpha)
+  rils_simplepheno <- full_join(nam_rils_gv, nam_rils_pheno)
   
   ########## Create the return list ---------------------- ####
-  out_list <- list(founder_list <- list(founder_gv_alphasim = founder_gv_alpha, founder_pheno_alphasim = founder_pheno_alpha,
-                                        founder_gv_simplePheno = founder_gv, founder_pheno_simplePheno = founder_pheno),
-                   nam_rils_list <- list(nam_rils_gv_alphasim = nam_rils_gv_alpha, nam_rils_pheno_alphasim = nam_rils_pheno_alpha,
-                                         nam_rils_gv_simplePheno = nam_rils_gv, nam_rils_pheno_simplePheno = nam_rils_pheno))
+  out_list <- list(founder_list = list(founder_alphasimR = founder_alpha,founder_simplePheno = founder_simplepheno,
+                                       founder_snp_data = founders_hapmap),
+                   nam_rils_list = list(nam_rils_alphasim = rils_alpha, nam_rils_simplePheno = rils_simplepheno,
+                                        nam_rils_snp_data = rils_hapmap))
+  print("The simulation is done! You may access the results in the list generated.")
   return(out_list)
 } ################################################# END OF THE FUNCTION ##########################################################

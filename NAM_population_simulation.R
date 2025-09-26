@@ -209,8 +209,8 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
       seed = 4000)
     
     nam_ancestry <- data.frame(RIL_ID = paste0("RIL_",nam_rils@id), 
-                               Donor_parent = paste0("Inbred_", nam_rils@mother), 
-                               Recurrent_parent = paste0("Inbred_", nam_rils@father))
+                               Donor_parent = paste0("Inbred_", nam_rils@father), 
+                               Recurrent_parent = paste0("Inbred_", nam_rils@mother))
     
     colnames(founder_gv_alpha) <- c("Founder_ID", paste0(traitName, "_GV"))
     colnames(founder_pheno_alpha) <- c("Founder_ID", paste0(traitName, "_Pheno"))
@@ -443,8 +443,8 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
       seed = 4000)
     
     nam_ancestry <- data.frame(RIL_ID = paste0("RIL_",nam_rils@id), 
-                               Donor_parent = paste0("Inbred_", nam_rils@mother), 
-                               Recurrent_parent = paste0("Inbred_", nam_rils@father))
+                               Donor_parent = paste0("Inbred_", nam_rils@father), 
+                               Recurrent_parent = paste0("Inbred_", nam_rils@mother))
     
     colnames(founder_gv_alpha) <- c("Founder_ID", paste0(traitName, "_GV"))
     colnames(founder_pheno_alpha) <- c("Founder_ID", paste0(traitName, "_Pheno"))
@@ -478,7 +478,7 @@ nam_simulation <- function(architecture = "A", nfamilies = 10, nfounders = 100, 
   ########## Create the return list ---------------------- ####
   out_list <- list(founder_list = list(founder_alphasimR = founder_alpha,founder_simplePheno = founder_simplepheno,
                                        founder_snp_data = founders_hapmap),
-                   nam_rils_list = list(nam_rils_alphasim = rils_alpha, nam_rils_simplePheno = rils_simplepheno,
+                   nam_rils_list = list(nam_rils_alphasimR = rils_alpha, nam_rils_simplePheno = rils_simplepheno,
                                         nam_rils_snp_data = rils_hapmap))
   print("The simulation is done! You may access the results in the list generated.")
   return(out_list)
